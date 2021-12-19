@@ -87,6 +87,23 @@ post_warning() {
   echo "::warning ::${body_text}"
 }
 
+update_package_json() {
+  #update package.json
+  FILE=package.json
+  if [ -f "$FILE" ]; then
+    jq --arg version "${NEXT_VERSION:1}" '.version = $version' $FILE > tmp.json && mv tmp.json $FILE
+
+    git add package.json
+    git commit -m "chore: bump package.json to ${NEXT_VERSION}"
+  fi
+
+
+
+
+}
+
+
+
 # Get labels and Pull Request data.
 ACTION=$(jq -r '.action' < "${GITHUB_EVENT_PATH}" )
 if [ "${ACTION}" = "labeled" ]; then
@@ -162,6 +179,8 @@ else
   # Set up Git.
   git config user.name "${GITHUB_ACTOR}"
   git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
+  update_package_json
 
   # Push the next tag.
   git tag -a "${NEXT_VERSION}" -m "${TAG_MESSAGE}"
